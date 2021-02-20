@@ -3,13 +3,11 @@
 (defpackage #:trivial-gamekit-timeline
   (:use #:cl)
   (:nicknames :gamekit.timeline)
-  (:export :timeline :keyframe
+  (:export :make-keyframe :make-timeline
 
            :play-timeline :stop-timeline :pause-timeline
            :restart-timeline :frame-advance :loop-timeline
-           :playingp :stoppedp :loopingp
-           
-           :make-keyframe))
+           :playingp :stoppedp :loopingp))
            
 
 (in-package #:trivial-gamekit-timeline)
@@ -70,6 +68,12 @@
 AMOUNT defaults to 1"
   (incf (slot-value timeline 'current-frame) amount))
 
+(defun make-timeline (&key loop)
+  "creates a timeline 
+
+if LOOP is non-nil the timeline will loop after completion"
+  (make-instance 'timeline :loop loop))
+
 (defun make-keyframe (timeline frame &key object slot event target (process-fn #'gamekit:lerp))
   "creates a keyframe at FRAME and adds it into TIMELINE
 
@@ -78,7 +82,8 @@ OBJECT is any standard lisp object
 SLOT is a symbol representing a slot in OBJECT
 EVENT is a function that accepts no arguments
 TARGET is the target value that the SLOT of OBJECT should be by FRAME
-PROCESS-FN is the function that returns the new value to be set in SLOT of OBJECT, defaults to gamekit:lerp"
+PROCESS-FN is the function that returns the new value to be set in SLOT of OBJECT, defaults to gamekit:lerp
+PROCESS-FN should accept 3 parameters: original value, target value, percentage between. it should return the current value between the two points"
   (let ((kf (make-instance 'keyframe :frame frame :event event :target target :process-fn process-fn)))
     (when (and object slot)
       (setf (slot-value kf 'object) object

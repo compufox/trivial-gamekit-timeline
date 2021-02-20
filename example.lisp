@@ -11,7 +11,7 @@
   ((position :initarg :pos :accessor sprite-pos)
    (color :initarg :col :accessor sprite-color)))
 
-(defvar *sprite-timeline* (make-instance 'timeline))
+(defvar *sprite-timeline* (make-timeline))
 (defvar *sprite1* (make-instance 'sprite :pos (vec2 0 0) :col (vec4 1 1 1 1)))
 (defvar *sprite2* (make-instance 'sprite :pos (vec2 400 400) :col (vec4 0 1 0 1)))
 (defvar *draw-text* nil)
@@ -37,6 +37,8 @@
 
 (defmethod gamekit:draw ((this example))
   (gamekit:draw-rect (Vec2 0 0) 800 600 :fill-paint (vec4 0 0 0 1))
+  (gamekit:draw-text "space: run timeline, r: reset, escape: quit"
+                     (vec2 200 20) :fill-color (Vec4 1 1 1 1))
   (when *draw-text*
     (gamekit:draw-text "My event fired!" (vec2 200 100) :fill-color (vec4 1 1 1 1)))
   (dolist (s *sprites*)
@@ -50,6 +52,7 @@
                          (play-timeline *sprite-timeline*)))
   (gamekit:bind-button :r :pressed
                        (lambda ()
+                         (stop-timeline *sprite-timeline*)
                          (setf *draw-text* nil
                                (sprite-pos *sprite1*) (vec2 0 0)
                                (sprite-color *sprite2*) (vec4 0 1 0 1))))

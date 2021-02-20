@@ -31,6 +31,14 @@ source code at: `example.lisp`
 
 ## API
 
+`(make-timeline &key loop)`
+
+creates a timeline
+
+if LOOP is non-nil the timeline will loop after completion
+
+---
+
 `(make-keyframe timeline frame &key object slot event target (process-fn #'gamekit:lerp))`
 
 creates a keyframe at FRAME and adds it into TIMELINE
@@ -46,7 +54,9 @@ EVENT is a function that accepts no arguments
 
 TARGET is the target value that the SLOT of OBJECT should be by FRAME
 
-PROCESS-FN is the function that returns the new value to be set in SLOT of OBJECT, defaults to gamekit:lerp
+PROCESS-FN is the function that returns the new value to be set in SLOT of OBJECT, defaults to gamekit:lerp.
+
+PROCESS-FN should accept 3 parameters: original value, target value, percentage between. it should return the current value between the two points
 
 ---
 
@@ -98,9 +108,7 @@ returns whether or not a timeline is currently stopped
 
 returns whether or not a timeline is currently playing
 
-## Example
-
-see `example.lisp`
+---
 
 ## License
 
