@@ -27,6 +27,7 @@
    (slot :initform nil :initarg :slot)
    (object :initform nil :initarg :object
            :reader keyframe-object)
+   (original-value :initform nil)
    (event :initform nil :initarg :event)
    (target :initform nil :initarg :target)
    (process-fn :initform nil :initarg :process-fn)))
@@ -43,11 +44,13 @@
 
 (defun stop-timeline (timeline)
   "stop TIMELINE"
+  (reset-timeline-keyframes timeline)
   (setf (slot-value timeline 'playing) nil)
   (setf *playing-timelines* (remove timeline *playing-timelines*)))
 
 (defun restart-timeline (timeline)
   "restart TIMELINE"
+  (stop-timeline timeline)
   (setf (slot-value timeline 'current-frame) 0))
 
 (defun playingp (timeline)
@@ -100,25 +103,24 @@ PROCESS-FN should accept 3 parameters: original value, target value, percentage 
                                frames)))
         (if keyframes
             (loop for key in (collect-uniques keyframes :key #'keyframe-object)
-                  do (let ((object (slot-value key 'object))
-                           (slot (slot-value key 'slot))
-                           (target (slot-value key 'target))
-                           (event (slot-value key 'event))
-                           (process-fn (slot-value key 'process-fn))
-                           (frame (slot-value key 'frame)))
-                       (cond
-                         (object
+                  do (with-slots (object slot target event process-fn frame original-value) key
+                       (when object
+                          ;; do this here so the keyframes only interpolate from the value that it starts processing from
+                          (unless original-value (setf original-value (slot-value object slot)))
                           (setf (slot-value object slot)
-                                (funcall process-fn (slot-value object slot) target
-                                         ;; divides the percent by 2 because for some reason
-                                         ;; lerps happen at twice the rate
-                                         (if (zerop frame) 0 (/ (/ current-frame frame) 2)))))
-                         ((and (= current-frame frame) event)
-                          (funcall event)))))
+                                (funcall process-fn original-value target
+                                         (if (zerop frame) 0 (/ current-frame frame)))))
+                       (when (and (= current-frame frame) event)
+                          (funcall event))))
             (if (loopingp tl)
-                (setf current-frame 0)
+                (restart-timeline tl)
                 (stop-timeline tl))))
       (incf current-frame))))
+
+(defun reset-timeline-keyframes (tl)
+  "resets all original values in timeline TL"
+  (loop for key in (slot-value tl 'frames)
+        do (setf (slot-value key 'original-value) nil)))
 
 (defun collect-uniques (l &key (key #'identity) (test #'eql))
   (loop for v in l
