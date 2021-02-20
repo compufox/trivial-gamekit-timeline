@@ -17,12 +17,7 @@
 (defvar *draw-text* nil)
 (defvar *sprites* (list *sprite1* *sprite2*))
 
-(make-keyframe *sprite-timeline* 0
-               :object *sprite1* :slot 'position
-               :target (vec2 0 0))
-(make-keyframe *sprite-timeline* 0
-               :object *sprite2* :slot 'color
-               :target (vec4 0 1 0 1))
+;; define our keyframes on our timeline.
 (make-keyframe *sprite-timeline* (* 60 1)
                :object *sprite1* :slot 'position
                :target (vec2 100 100))
@@ -32,15 +27,22 @@
 (make-keyframe *sprite-timeline* (* 60 10)
                :object *sprite2* :slot 'color
                :target (vec4 0 0 1 1))
+
+;; this one doesnt manipulate an object, it just fires an event after a certain time
 (make-keyframe *sprite-timeline* (* 60 3)
                :event #'(lambda () (setf *draw-text* t)))
 
 (defmethod gamekit:draw ((this example))
+  ;; boiler plate clearing the screen and drawing instructions
   (gamekit:draw-rect (Vec2 0 0) 800 600 :fill-paint (vec4 0 0 0 1))
   (gamekit:draw-text "space: run timeline, r: reset, escape: quit"
                      (vec2 200 20) :fill-color (Vec4 1 1 1 1))
+
+  ;; only draw this text after our event fires
   (when *draw-text*
     (gamekit:draw-text "My event fired!" (vec2 200 100) :fill-color (vec4 1 1 1 1)))
+
+  ;; draw all current sprites using their position and color
   (dolist (s *sprites*)
     (gamekit:draw-rect (sprite-pos s) 20 20 :fill-paint (sprite-color s))))
 
