@@ -24,7 +24,8 @@
 (defclass keyframe ()
   ((frame :initform nil :initarg :frame
           :reader keyframe-frame)
-   (slot :initform nil :initarg :slot)
+   (slot :initform nil :initarg :slot
+         :reader keyframe-slot)
    (object :initform nil :initarg :object
            :reader keyframe-object)
    (original-value :initform nil)
@@ -102,7 +103,8 @@ PROCESS-FN should accept 3 parameters: original value, target value, percentage 
       (let ((keyframes (member (find current-frame frames :test #'<= :key #'keyframe-frame)
                                frames)))
         (if keyframes
-            (loop for key in (collect-uniques keyframes :key #'keyframe-object)
+            (loop for key in (remove-duplicates (append (collect-uniques keyframes :key #'keyframe-object)
+                                                        (collect-uniques keyframes :key #'keyframe-slot)))
                   do (with-slots (object slot target event process-fn frame original-value) key
                        (when object
                           ;; do this here so the keyframes only interpolate from the value that it starts processing from
